@@ -1,0 +1,26 @@
+# Node/React
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Spring Boot / Maven
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/*.log
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+
+# System
+.DS_Store
+Thumbs.db
+
+# Project specifics
+sample_data.csv
+project_requirements.txt
+project_requirements.pdf
+backend/src/main/resources/application-secret.properties
