@@ -4,12 +4,14 @@ import com.analyst.dashboard.dto.DatasetInfo;
 import com.analyst.dashboard.dto.QueryRequest;
 import com.analyst.dashboard.dto.QueryResponse;
 import com.analyst.dashboard.model.Dataset;
+import com.analyst.dashboard.model.User;
 import com.analyst.dashboard.repository.DatasetRepository;
 import com.analyst.dashboard.service.CsvParserService;
 import com.analyst.dashboard.service.DataProcessingService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,7 +39,8 @@ public class DatasetController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadCsv(@RequestParam("file") MultipartFile file,
-                                        @RequestParam(value = "name", required = false) String name) {
+                                        @RequestParam(value = "name", required = false) String name,
+                                        @AuthenticationPrincipal User user) {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
@@ -48,7 +51,7 @@ public class DatasetController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Only CSV files are allowed"));
             }
 
-            Dataset dataset = csvParserService.parseAndSave(file, name);
+            Dataset dataset = csvParserService.parseAndSave(file, name, user);
             return ResponseEntity.ok(toDatasetInfo(dataset));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
@@ -57,8 +60,8 @@ public class DatasetController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DatasetInfo>> getAllDatasets() {
-        List<Dataset> datasets = datasetRepository.findAllByOrderByUploadedAtDesc();
+    public ResponseEntity<List<DatasetInfo>> getAllDatasets(@AuthenticationPrincipal User user) {
+        List<Dataset> datasets = datasetRepository.findByUserOrderByUploadedAtDesc(user);
         List<DatasetInfo> infos = datasets.stream()
                 .map(this::toDatasetInfo)
                 .collect(Collectors.toList());
@@ -66,8 +69,8 @@ public class DatasetController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getDataset(@PathVariable Long id) {
-        Optional<Dataset> dataset = datasetRepository.findById(id);
+    public ResponseEntity<?> getDataset(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        Optional<Dataset> dataset = datasetRepository.findByIdAndUser(id, user);
         if (dataset.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -91,8 +94,9 @@ public class DatasetController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteDataset(@PathVariable Long id) {
-        if (!datasetRepository.existsById(id)) {
+    public ResponseEntity<?> deleteDataset(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        Optional<Dataset> dataset = datasetRepository.findByIdAndUser(id, user);
+        if (dataset.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         datasetRepository.deleteById(id);
@@ -100,9 +104,10 @@ public class DatasetController {
     }
 
     @PostMapping("/{id}/query")
-    public ResponseEntity<?> queryDataset(@PathVariable Long id, @RequestBody QueryRequest request) {
+    public ResponseEntity<?> queryDataset(@PathVariable Long id, @RequestBody QueryRequest request,
+                                           @AuthenticationPrincipal User user) {
         try {
-            Optional<Dataset> dataset = datasetRepository.findById(id);
+            Optional<Dataset> dataset = datasetRepository.findByIdAndUser(id, user);
             if (dataset.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }

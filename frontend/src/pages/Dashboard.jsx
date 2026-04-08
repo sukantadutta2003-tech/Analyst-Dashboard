@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Database, FileText, BarChart2, TrendingUp, Calendar, ArrowRight, Loader } from 'lucide-react';
+import { Database, FileText, BarChart2, TrendingUp, Calendar, ArrowRight, Loader, UploadCloud } from 'lucide-react';
 import { DatasetService } from '../services/api';
 
 const Dashboard = () => {

@@ -16,6 +16,10 @@ public class Dataset {
     @Column(nullable = false)
     private String name;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @Column(nullable = false)
     private String fileName;
 
@@ -60,4 +64,7 @@ public class Dataset {
 
     public LocalDateTime getUploadedAt() { return uploadedAt; }
     public void setUploadedAt(LocalDateTime uploadedAt) { this.uploadedAt = uploadedAt; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 }

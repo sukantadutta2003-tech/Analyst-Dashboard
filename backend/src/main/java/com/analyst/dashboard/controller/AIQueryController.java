@@ -3,9 +3,11 @@ package com.analyst.dashboard.controller;
 import com.analyst.dashboard.dto.QueryRequest;
 import com.analyst.dashboard.dto.QueryResponse;
 import com.analyst.dashboard.model.Dataset;
+import com.analyst.dashboard.model.User;
 import com.analyst.dashboard.repository.DatasetRepository;
 import com.analyst.dashboard.service.OpenAIService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,7 +26,7 @@ public class AIQueryController {
     }
 
     @PostMapping("/query")
-    public ResponseEntity<?> aiQuery(@RequestBody QueryRequest request) {
+    public ResponseEntity<?> aiQuery(@RequestBody QueryRequest request, @AuthenticationPrincipal User user) {
         try {
             if (request.getQuestion() == null || request.getQuestion().isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Question is required"));
@@ -34,7 +36,7 @@ public class AIQueryController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Dataset ID is required"));
             }
 
-            Optional<Dataset> dataset = datasetRepository.findById(request.getDatasetId());
+            Optional<Dataset> dataset = datasetRepository.findByIdAndUser(request.getDatasetId(), user);
             if (dataset.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }

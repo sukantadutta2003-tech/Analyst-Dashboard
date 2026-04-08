@@ -1,6 +1,7 @@
 package com.analyst.dashboard.service;
 
 import com.analyst.dashboard.model.Dataset;
+import com.analyst.dashboard.model.User;
 import com.analyst.dashboard.repository.DatasetRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,7 +29,7 @@ public class CsvParserService {
         this.objectMapper = objectMapper;
     }
 
-    public Dataset parseAndSave(MultipartFile file, String datasetName) throws Exception {
+    public Dataset parseAndSave(MultipartFile file, String datasetName, User user) throws Exception {
         Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
 
         CSVFormat format = CSVFormat.DEFAULT.builder()
@@ -58,6 +59,7 @@ public class CsvParserService {
         dataset.setDataJson(objectMapper.writeValueAsString(rows));
         dataset.setRowCount(rows.size());
         dataset.setColumnCount(headers.size());
+        dataset.setUser(user);
 
         return datasetRepository.save(dataset);
     }
